@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Relay control panel</title>
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+        
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script type="text/javascript">
+            function start_state() {
+                /*fetch('http://10.72.0.117:8000/relay_state/1')
+                    .then(response => response.json())
+                    .then(json => {
+                        console.log(json["state"]);
+                        if (json["state"] == 0) {
+                            document.getElementById("1").innerHTML = "Turn ON";
+                        }
+                        else {
+                            document.getElementById("1").innerHTML = "Turn OFF";
+                        }
+                    })*/
+                fetch('http://10.72.0.117:8000/relay_states')
+                    .then(response => response.json())
+                    .then(json => {
+                        for (const[id,value] of Object.entries(json)) {
+                            const main = document.getElementById("main");
+                            console.log(`${id}: ${value}`);
+                            const label = document.createElement("h5");
+                            label.innerHTML = "Relay " + id;
+                            main.appendChild(label);
+                            const btn = document.createElement("button");
+                            if (value == 0){
+                                btn.innerHTML = "Turn ON";
+                                btn.setAttribute("class", "btn btn-danger");
+                            } else {
+                                btn.innerHTML = "Turn OFF";
+                                btn.setAttribute("class", "btn btn-success");
+                            }
+                            btn.setAttribute("id", id);
+                            btn.onclick = function() {
+                                update_state(id);
+                            }
+                            main.appendChild(btn);
+                        }
+                    })
+            }
+            
+            </script>
+    </head>
+    <body onLoad="start_state()">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+
+        <script>
+            function refresh() {
+                fetch('http://10.72.0.117:8000/relay_states')
+                    .then(response => response.json())
+                    .then(json => {
+                        for (const[id,value] of Object.entries(json)) {
+                            console.log(`${id}: ${value}`);
+                            if (value == 0){
+                                document.getElementById(id).innerHTML = "Turn ON";
+                                document.getElementById(id).classList.add("btn-danger");
+                                document.getElementById(id).classList.remove("btn-success");
+                            } else {
+                                document.getElementById(id).innerHTML = "Turn OFF";
+                                document.getElementById(id).classList.remove("btn-danger");
+                                document.getElementById(id).classList.add("btn-success");
+                            }
+
+                            }
+                        })
+                    }
+        </script>
+        <script>
+            function update_state(id = "") {
+                fetch('http://10.72.0.117:8000/relay_state/' + id)
+                    .then(response => response.json())
+                    .then(json => {
+                        console.log(json["state"]);
+                        if (json["state"] == 0) {
+                            send_state(id, {"state":1});
+                            document.getElementById(id).innerHTML = "Turn OFF";
+                            document.getElementById(id).classList.remove("btn-danger");
+                            document.getElementById(id).classList.add("btn-success");
+                        }
+                        else {
+                            send_state(id, {"state":0});
+                            document.getElementById(id).innerHTML = "Turn ON";
+                            document.getElementById(id).classList.add("btn-danger");
+                            document.getElementById(id).classList.remove("btn-success");
+                        }
+                    })
+            }
+        </script>
+        <script>
+            async function send_state(id = "",data = {}) {
+                const response = await fetch('http://10.72.0.117:8000/relay_post/' + id, {
+                    method: 'POST',
+                    headers: {
+                          'Content-Type': 'application/json'
+                          // 'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: JSON.stringify(data)
+                })
+            }
+        </script>
+        <div id="main" class="container">
+            <h1>Relay Control Panel v1.0</h1>
+            <p></p>
+            <button class="btn btn-warning" onclick="refresh()">refresh</button>
+            <p></p>
+          </div>
+    </body>
+</html>
