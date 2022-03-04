@@ -8,7 +8,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <script type="text/javascript">
             function start_state() {
-                /*fetch('http://10.72.0.117:8000/relay_state/1')
+                /*fetch('http://{{server_ip}}:8000/relay_state/1')
                     .then(response => response.json())
                     .then(json => {
                         console.log(json["state"]);
@@ -19,7 +19,7 @@
                             document.getElementById("1").innerHTML = "Turn OFF";
                         }
                     })*/
-                fetch('http://10.72.0.117:8000/relay_states')
+                fetch('http://{{server_ip}}:8000/relay_states')
                     .then(response => response.json())
                     .then(json => {
                         for (const[id,value] of Object.entries(json)) {
@@ -29,7 +29,7 @@
                             label.innerHTML = "Relay " + id;
                             main.appendChild(label);
                             const btn = document.createElement("button");
-                            if (value == 0){
+                            if (value[0] == 0){
                                 btn.innerHTML = "Turn ON";
                                 btn.setAttribute("class", "btn btn-danger");
                             } else {
@@ -52,12 +52,12 @@
 
         <script>
             function refresh() {
-                fetch('http://10.72.0.117:8000/relay_states')
+                fetch(`http://{{server_ip}}:8000/relay_states`)
                     .then(response => response.json())
                     .then(json => {
                         for (const[id,value] of Object.entries(json)) {
                             console.log(`${id}: ${value}`);
-                            if (value == 0){
+                            if (value[0] == 0){
                                 document.getElementById(id).innerHTML = "Turn ON";
                                 document.getElementById(id).classList.add("btn-danger");
                                 document.getElementById(id).classList.remove("btn-success");
@@ -73,10 +73,10 @@
         </script>
         <script>
             function update_state(id = "") {
-                fetch('http://10.72.0.117:8000/relay_state/' + id)
+                fetch('http://{{server_ip}}:8000/relay_state/' + id)
                     .then(response => response.json())
                     .then(json => {
-                        console.log(json["state"]);
+                        console.log("id:",id,"state:",json["state"]);
                         if (json["state"] == 0) {
                             send_state(id, {"state":1});
                             document.getElementById(id).innerHTML = "Turn OFF";
@@ -94,7 +94,7 @@
         </script>
         <script>
             async function send_state(id = "",data = {}) {
-                const response = await fetch('http://10.72.0.117:8000/relay_post/' + id, {
+                const response = await fetch('http://{{server_ip}}:8000/relay_post/' + id, {
                     method: 'POST',
                     headers: {
                           'Content-Type': 'application/json'

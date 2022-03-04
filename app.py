@@ -18,15 +18,19 @@ from flask import request
 import RPi.GPIO as GPIO
 import sys
 import time
+import socket
 
 ###
 # defines & settings
 ###
 
-relay_1 = 7
+relays = {"1":[0,3],"2":[0,5],"3":[0,7],"4":[0,11],"5":[0,13],"6":[0,15],"test":[0,None]}
 
 GPIO.setmode(GPIO.BOARD)
-GPIO.setup(relay_1, GPIO.OUT)
+
+for relay in relays:
+    if relay != "test":
+        GPIO.setup(relays[relay][1], GPIO.OUT)
 
 app = Flask(__name__)
 
@@ -46,11 +50,14 @@ def main():
 ###
 
 
-relays = {"1":0,"2":0,"3":0,"4":0,"5":0,"6":0,"7":0,"8":0,"8":0,"9":0,"10":0,"11":0,"12":0,"13":0,"14":0,"15":0,"16":0}
-
 @app.route('/')
 def home():
-    return render_template('index.html')
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip = s.getsockname()[0]
+    s.close()
+    print(ip, type(ip))
+    return render_template('index.html', server_ip=ip)
 
 @app.route('/relay_states', methods=['GET'])
 def relay_states():
@@ -62,20 +69,33 @@ def relay_states():
 def relay_state(id):
     global relays
     print(relays)
-    return {"relay_id":id,"state":relays[id]}
+    return {"relay_id":id,"state":relays[id][0]}
 
 @app.route('/relay_post/<id>', methods=['POST'])
 def relay_post(id):
     global relays
     request_data = request.get_json()
-    relays[id] = request_data["state"]
+    relays[id][0] = request_data["state"]
     print(id,relays[id])
-    if relays[id]:
-        GPIO.output(relay_1, GPIO.HIGH)
+    delay = 0.02
+    if id != "test":
+        if relays[id][0]:
+            GPIO.output(relays[id][1], GPIO.HIGH)
+        else:
+            GPIO.output(relays[id][1], GPIO.LOW)
     else:
-        GPIO.output(relay_1, GPIO.LOW)
+        while(relays[id][0]):
+            for idr in range(len(relays)-1):
+                print(idr)
+                GPIO.output(relays[str(idr+1)][1], GPIO.HIGH)
+                time.sleep(delay)
+            for idr in range(len(relays)-1,0,-1):
+                print(idr)
+                GPIO.output(relays[str(idr)][1], GPIO.LOW)
+                time.sleep(delay)
+
     print(relays)
-    return {"relay_id":id,"state":relays[id]}
+    return {"relay_id":id,"state":relays[id][0]}
 
 if __name__ == '__main__':
     try:
