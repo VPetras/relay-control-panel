@@ -24,13 +24,17 @@ import socket
 # defines & settings
 ###
 
-relays = {"1":[0,3],"2":[0,5],"3":[0,7],"4":[0,11],"5":[0,13],"6":[0,15],"test":[0,None]}
+relays = {"1":[1,3],"2":[1,5],"3":[1,7],"4":[1,11],"5":[1,13],"6":[1,15],"test":[0,None]}
 
 GPIO.setmode(GPIO.BOARD)
 
 for relay in relays:
     if relay != "test":
         GPIO.setup(relays[relay][1], GPIO.OUT)
+        if relays[relay][0]:
+            GPIO.output(relays[relay][1], GPIO.HIGH)
+        else:
+            GPIO.output(relays[relay][1], GPIO.LOW)
 
 app = Flask(__name__)
 
@@ -77,7 +81,7 @@ def relay_post(id):
     request_data = request.get_json()
     relays[id][0] = request_data["state"]
     print(id,relays[id])
-    delay = 0.02
+    delay = 0.15
     if id != "test":
         if relays[id][0]:
             GPIO.output(relays[id][1], GPIO.HIGH)
@@ -93,6 +97,13 @@ def relay_post(id):
                 print(idr)
                 GPIO.output(relays[str(idr)][1], GPIO.LOW)
                 time.sleep(delay)
+        for relay in relays:
+            if relay != "test":
+                GPIO.setup(relays[relay][1], GPIO.OUT)
+                if relays[relay][0]:
+                    GPIO.output(relays[relay][1], GPIO.HIGH)
+                else:
+                    GPIO.output(relays[relay][1], GPIO.LOW)
 
     print(relays)
     return {"relay_id":id,"state":relays[id][0]}

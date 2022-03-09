@@ -1,0 +1,15 @@
+[Unit]
+Description=Relay control panel service
+After=network.target
+Wants=network-online.target systemd-networkd-wait-online.service
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/relay-control-panel
+ExecStart=/usr/bin/python3 home/pi/relay-control-panel/app.py
+Restart=on-failure
+RestartSec=1s
+
+[Install]
+WantedBy=multi-user.target
